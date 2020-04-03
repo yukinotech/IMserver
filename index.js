@@ -2,7 +2,7 @@ const express = require('express')
 const session = require("express-session")
 const MongoStore = require('connect-mongo')(session)
 const MongoClient = require('mongodb').MongoClient;
-
+const genID = require('./util/genID')
 // Connection URL
 const url = 'mongodb://localhost:27017';
 
@@ -60,8 +60,8 @@ client.connect((err)=>{
               res.json({ status: 200 })
             }
         } else{
-          console.log('202 error')
-          res.json({ status: 202 })
+          console.log('201 error')
+          res.json({ status: 201 })
         }
     } else{
       console.log('202 error')
@@ -86,7 +86,7 @@ client.connect((err)=>{
             let findOneResult = await collection.findOne({username})
             // console.log('findOneResult:',findOneResult)
             if(findOneResult===null){
-              let insertOneResult = await collection.insertOne({username,password})
+              let insertOneResult = await collection.insertOne({username,password,uid:genID()})
               // console.log('insertOneResult:',insertOneResult)
               console.log('user register success ')
               res.json({ status: 200 })
@@ -105,11 +105,8 @@ client.connect((err)=>{
     }
     console.log(req.session)
     console.log(req.sessionID)
-    
     // res.send('登录成功')
-
   });
-  
   
   app.listen(3000,()=>{
     console.log('server run on port 3000')
