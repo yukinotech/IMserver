@@ -1,3 +1,6 @@
-let a = Math.floor(Math.random()*9+1).toString()+Math.random().toString().substr(3,2)+Date.now().toString().substr(9,4)
+let genAvatarBgColor = require('./util/genAvatarBgColor')
+for(let i = 0;i<1000000;i++){
+  console.log(genAvatarBgColor())
+}
 
-console.log(a)
+

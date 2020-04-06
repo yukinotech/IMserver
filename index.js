@@ -3,6 +3,7 @@ const session = require("express-session")
 const MongoStore = require('connect-mongo')(session)
 const MongoClient = require('mongodb').MongoClient;
 const genID = require('./util/genID')
+const genAvatarBgColor = require('./util/genAvatarBgColor')
 // Connection URL
 const url = 'mongodb://localhost:27017';
 
@@ -56,8 +57,14 @@ client.connect((err)=>{
               res.json({ status: 201 })
             } else{
               console.log('user login success')
+              console.log(findOneResult.userNickName)
               req.session.username=username
-              res.json({ status: 200 })
+              res.json({ 
+                status: 200,
+                userNickName:findOneResult.userNickName,
+                uid:findOneResult.uid,
+                avatarBgc:findOneResult.avatarBgc,
+              })
             }
         } else{
           console.log('201 error')
@@ -76,9 +83,10 @@ client.connect((err)=>{
     console.log(req.body)
     console.log(req.session.username)
     if(req.body){
-      if(req.body.username && req.body.password){
+      if(req.body.username && req.body.password && req.body.userNickName){
         let username = req.body.username
         let password = req.body.password
+        let userNickName = req.body.userNickName
         let uPattern = /^[a-zA-Z0-9_-]{4,16}$/
         if(uPattern.test(username) && uPattern.test(password)){
             let db = client.db('IMdb');
@@ -86,7 +94,14 @@ client.connect((err)=>{
             let findOneResult = await collection.findOne({username})
             // console.log('findOneResult:',findOneResult)
             if(findOneResult===null){
-              let insertOneResult = await collection.insertOne({username,password,uid:genID()})
+              let insertOneResult = await collection.insertOne({
+                username,
+                password,
+                uid:genID(),
+                userNickName,
+                avatarBgc:genAvatarBgColor(),
+                friends:[]
+              })
               // console.log('insertOneResult:',insertOneResult)
               console.log('user register success ')
               res.json({ status: 200 })
@@ -107,7 +122,79 @@ client.connect((err)=>{
     console.log(req.sessionID)
     // res.send('登录成功')
   });
+
+  app.post("/isLogin",async(req,res)=>{
+    console.log('isLogin')
+    console.log(req.sessionID)
+    console.log(req.session)
+    console.log(req.session.username)
+    if(req.sessionID && req.session && req.session.username){
+      let db = client.db('IMdb');
+      let collection = db.collection('users');
+      let username = req.session.username
+      let findOneResult = await collection.findOne({username})
+      console.log('true')
+      res.json({ 
+        status: true,
+        username:findOneResult.username,
+        userNickName:findOneResult.userNickName,
+        uid:findOneResult.uid,
+        avatarBgc:findOneResult.avatarBgc
+      })
+    } else{
+      console.log('false')
+      res.json({ status: false })
+    }
+  })
   
+  app.post("/searchFriend",async(req,res)=>{
+    if(req.sessionID && 
+      req.session && 
+      req.session.username &&
+      req.body && 
+      req.body.uid
+      ){
+      let db = client.db('IMdb');
+      let collection = db.collection('users');
+      let uid = req.body.uid
+      let findOneResult = await collection.findOne({uid})
+      if(findOneResult===null){
+        res.json({
+          status:201
+        })
+      } else{
+        res.json({
+          status:200,
+          userNickName:findOneResult.userNickName,
+          uid:findOneResult.uid,
+          avatarBgc:findOneResult.avatarBgc,
+        })
+      }
+    } else{
+      res.json({
+        status:202
+      })
+    }
+  })
+
+  app.post("/addFriend",async(req,res)=>{
+    if(req.sessionID && 
+      req.session && 
+      req.session.username &&
+      req.body && 
+      req.body.toBeFriendUid
+      ){
+        let db = client.db('IMdb');
+        let collection = db.collection('users');
+        let uid = req.body.toBeFriendUid
+        let findOneResult = await collection.findOne({uid})
+      }
+    else{
+      res.json({
+        status:202
+      })
+    }
+  })
   app.listen(3000,()=>{
     console.log('server run on port 3000')
   })
