@@ -20,7 +20,13 @@ module.exports = (client)=>{
             status:205,
             message:'不能添加自己为好友'
           })
-        } else{
+        } else if(findOneResult.friends.indexOf(req.session.username)!==-1){
+          res.json({
+            status:206,
+            message:'已经互为好友'
+          })
+        }
+        else{
           let filterResult = findOneResult.messageList.filter((item)=>{
             console.log(item)
             console.log(item.type==='addFriendReq')

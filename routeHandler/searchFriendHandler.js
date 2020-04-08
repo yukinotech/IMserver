@@ -14,14 +14,23 @@ module.exports = (client)=>{
         res.json({
           status:201
         })
+      } else if(findOneResult.friends.indexOf(req.session.username)!==-1){
+          res.json({
+            status:200,
+            userNickName:findOneResult.userNickName,
+            uid:findOneResult.uid,
+            avatarBgc:findOneResult.avatarBgc,
+            isFriend:true
+          })
       } else{
-        res.json({
-          status:200,
-          userNickName:findOneResult.userNickName,
-          uid:findOneResult.uid,
-          avatarBgc:findOneResult.avatarBgc,
-        })
-      }
+          res.json({
+            status:200,
+            userNickName:findOneResult.userNickName,
+            uid:findOneResult.uid,
+            avatarBgc:findOneResult.avatarBgc,
+            isFriend:false
+          })
+        }
     } else{
       res.json({
         status:202

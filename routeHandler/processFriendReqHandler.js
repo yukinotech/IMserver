@@ -51,10 +51,14 @@ module.exports = (client)=>{
                   fromUserInfo:addFriendMsgArr[0].fromUserInfo
                 },...(findOneResult.messageList)],
                 friends:[
-                  ...(findOneResult.friends),{
-                    username:req.body.toBeFriendUsername
-                  }
+                  ...(findOneResult.friends),
+                  req.body.toBeFriendUsername
                 ]
+              }
+            })
+            await collection.findOneAndUpdate({username:toBeFriendUsername},{
+              $push:{
+                friends:req.session.username
               }
             })
             res.json({

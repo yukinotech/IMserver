@@ -16,6 +16,7 @@ const addFriendHandler = require('./routeHandler/addFriendHandler')
 const getMessageListHandler = require('./routeHandler/getMessageListHandler')
 const processFriendReqHandler = require('./routeHandler/processFriendReqHandler')
 const searchFriendHandler = require('./routeHandler/searchFriendHandler')
+const getFriendListHandler = require('./routeHandler/getFriendListHandler')
 
 let app = express()
 
@@ -59,6 +60,8 @@ client.connect((err)=>{
   app.post("/getMessageList",getMessageListHandler(client))
 
   app.post("/processFriendReq",processFriendReqHandler(client))
+
+  app.post("/getFriendList",getFriendListHandler(client))
 
   app.listen(3000,()=>{
     console.log('server run on port 3000')
