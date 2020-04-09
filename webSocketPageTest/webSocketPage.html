@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js"></script>
+    <style>
+      #ddd{
+        color: #111;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div>
+        <label for="">账号</label><input id="username" type="text">
+      </div>
+      <div>
+        <label for="">密码</label><input id="password" type="text">
+      </div>
+      <button id="login">登录</button>
+    </div>
+    <div>
+      <label for="">发送消息</label><input id="messageBox" type="text">
+    </div>
+    <div>
+      <button id="sendMessageBox">发消息</button>
+    </div>
+    <script>
+      let loginButton = document.getElementById('login')
+      loginButton.onclick = async function(){
+        let options = {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          })
+        };
+        let res = await fetch('http://192.168.1.2:3000/login', options)
+        let resObj = await res.json()
+        console.log(resObj)
+      }
+
+      var socket = io();
+      let sendMessageButton = document.getElementById('sendMessageBox')
+      let messageBox = document.getElementById('messageBox')
+
+      sendMessageButton.onclick = function(){
+        socket.emit('chat message', messageBox.value);
+        return false;
+      }
+
+      socket.on('chat message', function(msg){
+        console.log(msg)
+      })
+
+    </script>
+  </body>
+</html>

@@ -4,9 +4,11 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "blueimp-md5": "^2.13.0",
     "connect-mongo": "^3.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
-    "mongodb": "^3.5.5"
+    "mongodb": "^3.5.5",
+    "socket.io": "^2.3.0"
   }
 }

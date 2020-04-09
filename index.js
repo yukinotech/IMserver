@@ -2,6 +2,9 @@ const express = require('express')
 const session = require("express-session")
 const MongoStore = require('connect-mongo')(session)
 const MongoClient = require('mongodb').MongoClient;
+const path = require('path')
+
+const md5 = require('blueimp-md5')
 
 // Connection URL
 const url = 'mongodb://localhost:27017';
@@ -17,13 +20,16 @@ const getMessageListHandler = require('./routeHandler/getMessageListHandler')
 const processFriendReqHandler = require('./routeHandler/processFriendReqHandler')
 const searchFriendHandler = require('./routeHandler/searchFriendHandler')
 const getFriendListHandler = require('./routeHandler/getFriendListHandler')
+const getDialogueListHandler = require('./routeHandler/getDialogueListHandler')
 
 let app = express()
+const server = require('http').createServer(app)
+const io = require('socket.io')(server);
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
-app.use(session({
+let sessionMiddleware = session({
   secret: 'this is string key', // 可以随便写。 一个 String 类型的字符串，作为服务器端生成 session 的签名
   name: 'session_id',
   /*保存在本地cookie的一个名字 默认connect.sid  可以不设置*/
@@ -43,7 +49,15 @@ app.use(session({
     dbName: 'IMdb',
     collection:'sessions'
   })
-}))
+})
+
+app.use(sessionMiddleware)
+io.use(function(socket, next) {
+  sessionMiddleware(socket.request, socket.request.res, next);
+})
+
+//双向hash表，存socket-io-id和username
+let hashName ={}
 
 client.connect((err)=>{
   
@@ -63,7 +77,99 @@ client.connect((err)=>{
 
   app.post("/getFriendList",getFriendListHandler(client))
 
-  app.listen(3000,()=>{
-    console.log('server run on port 3000')
+  app.post("/getDialogueList",getDialogueListHandler(client))
+
+  // app webSocketTest 
+  app.get('/loginPage',(req,res)=>{
+    res.sendFile(path.join(__dirname,'./webSocketPageTest/webSocketPage.html'))
   })
+
+
+  io.on('connection', (socket) => {
+    // console.log(socket.request)
+    // console.log('加入了一个新人')
+    console.log(socket.request.session.username)
+    if(socket.request.session.username && socket.id){
+      hashName[socket.id]=socket.request.session.username
+      hashName[socket.request.session.username]=socket.id
+    }
+
+    socket.on('p2pChat message',async(msg)=> { 
+      // console.log(socket.request.session.username)
+      // console.log(socket.id)
+
+
+      if(socket.request.session.username && socket.id){
+        // 每次连接socketio的时候，都要刷新双向hash表
+        
+        hashName[socket.id]=socket.request.session.username
+        hashName[socket.request.session.username]=socket.id
+
+        let db = client.db('IMdb');
+        let collection = db.collection('users');
+        let username = socket.request.session.username
+
+        if(msg.type==='p2pChat' && msg.toWho){
+          let fromUser = await collection.findOne({username})
+          let toUser = await collection.findOne({username:msg.toWho})
+
+          console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+          if(fromUser && toUser){
+
+            let messagesCollection = db.collection('messages')
+            let p2pChatId = md5(
+              [fromUser.username,toUser.username].sort((a,b)=>{
+                return a>b?true:false
+              }).join()
+            )
+            let messageFoundResult = await messagesCollection.findOne({p2pChatId})
+            let date = new Date()
+            if(messageFoundResult){
+              //添加入已知数组
+              await messagesCollection.findOneAndUpdate({p2pChatId},{
+                $push:{
+                  messageList:{
+                    $each:[{
+                      username:fromUser.username,
+                      message:msg.message,
+                      time:date
+                    }],
+                    $sort:{
+                      time:1
+                    }
+                  }
+                }
+              })
+            } else{
+              await messagesCollection.insertOne({
+                p2pChatId,
+                members:[fromUser.username,toUser.username],
+                messageList:[{
+                  username:fromUser.username,
+                  message:msg.message,
+                  time:date
+                }]
+              })
+            }
+            console.log(hashName[msg.toWho])
+            console.log(hashName[hashName[msg.toWho]])
+            io.to(hashName[msg.toWho]).emit('p2pChat message',{
+              username:fromUser.username,
+              userNickName:fromUser.userNickName,
+              avatarBgc:fromUser.avatarBgc,
+              message:msg.message,
+              time:date
+            })
+          }
+        }
+
+      }
+    })
+  })
+
+  server.listen(3000,()=>{
+    console.log('server run on port 3000')
+  });
+
+
 })
