@@ -10,5 +10,5 @@ RUN npm install yarn
 RUN yarn
 
 EXPOSE 3000
-RUN node index.js
-# CMD [ "npm", "start" ]
+# RUN node index.js
+CMD [ "npm", "start" ]
