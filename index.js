@@ -120,8 +120,13 @@ client.connect((err)=>{
 
           console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
           if(fromUser && toUser){
-
+            console.log('fromUser',fromUser.username)
+            console.log('toUser',toUser.username)
             let messagesCollection = db.collection('messages')
+            let u = [fromUser.username,toUser.username].sort((a,b)=>{
+              return a>b?true:false
+            }).join()
+            console.log('u',u)
             let p2pChatId = md5(
               [fromUser.username,toUser.username].sort((a,b)=>{
                 return a>b?true:false
