@@ -36,10 +36,10 @@ let hashName ={}
 
 client.connect((err)=>{
   
-  // let db = client.db('IMdb')
-  // db.createCollection('users')
-  // db.createCollection('sessions')
-  // db.createCollection('messages')
+  let db = client.db('IMdb')
+  db.createCollection('users')
+  db.createCollection('sessions')
+  db.createCollection('messages')
 
   let sessionMiddleware = session({
     secret: 'this is string key', // 可以随便写。 一个 String 类型的字符串，作为服务器端生成 session 的签名
