@@ -5,15 +5,12 @@ const MongoClient = require('mongodb').MongoClient;
 const path = require('path')
 
 const md5 = require('blueimp-md5')
-
+const configFunc = require('./config')
 // Connection URL
-const url = 'mongodb://localhost:27017';
-
+const url = configFunc(process.argv).mongoUrl
+console.log(url)
 // Create a new MongoClient
 const client = new MongoClient(url, { useUnifiedTopology: true });
-
-
-
 
 
 const loginHandler = require('./routeHandler/loginHandler')
@@ -39,10 +36,10 @@ let hashName ={}
 
 client.connect((err)=>{
   
-  let db = client.db('IMdb')
-  db.createCollection('users')
-  db.createCollection('sessions')
-  db.createCollection('messages')
+  // let db = client.db('IMdb')
+  // db.createCollection('users')
+  // db.createCollection('sessions')
+  // db.createCollection('messages')
 
   let sessionMiddleware = session({
     secret: 'this is string key', // 可以随便写。 一个 String 类型的字符串，作为服务器端生成 session 的签名
@@ -60,7 +57,7 @@ client.connect((err)=>{
   
     rolling: true, //在每次请求时强行设置 cookie，这将重置 cookie 过期时间（默认：false）
     store: new MongoStore({
-      url:'mongodb://localhost:27017',
+      url:url,
       dbName: 'IMdb',
       collection:'sessions'
     })
@@ -186,6 +183,5 @@ client.connect((err)=>{
   server.listen(3000,()=>{
     console.log('server run on port 3000')
   });
-
 
 })

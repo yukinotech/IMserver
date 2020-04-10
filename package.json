@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js -pro",
+    "devStart": "node index.js"
   },
   "dependencies": {
     "blueimp-md5": "^2.13.0",
