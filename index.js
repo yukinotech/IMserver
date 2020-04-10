@@ -67,7 +67,12 @@ client.connect((err)=>{
   })
   
   app.use(sessionMiddleware)
+  // app.use((res,req,next)=>{
+  //   console.log('express每次都')
+  //   next()
+  // })
   io.use(function(socket, next) {
+    // console.log('每次都跑？')
     sessionMiddleware(socket.request, socket.request.res, next);
   })
   
@@ -98,23 +103,23 @@ client.connect((err)=>{
 
   io.on('connection', (socket) => {
     // console.log(socket.request)
-    // console.log('加入了一个新人')
-    console.log(socket.request.session.username)
+    console.log('加入了一个新人',socket.request.session.username)
     if(socket.request.session.username && socket.id){
       hashName[socket.id]=socket.request.session.username
       hashName[socket.request.session.username]=socket.id
     }
 
     socket.on('p2pChat message',async(msg)=> { 
-      // console.log(socket.request.session.username)
-      // console.log(socket.id)
-
+      console.log('socketIOSessionName',socket.request.session.username)
 
       if(socket.request.session.username && socket.id){
         // 每次连接socketio的时候，都要刷新双向hash表
         
         hashName[socket.id]=socket.request.session.username
         hashName[socket.request.session.username]=socket.id
+        console.log('socket-io-session',socket.request.sessionID)
+        console.log('发信人',socket.request.session.username)
+        console.log('收信人',msg.toWho)
 
         let db = client.db('IMdb');
         let collection = db.collection('users');

@@ -6,6 +6,7 @@ module.exports = (client)=>{
       req.body && 
       req.body.uid
       ){
+      console.log(req.session.username)
       let db = client.db('IMdb');
       let collection = db.collection('users');
       let uid = req.body.uid
