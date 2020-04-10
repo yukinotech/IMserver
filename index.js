@@ -124,12 +124,12 @@ client.connect((err)=>{
             console.log('toUser',toUser.username)
             let messagesCollection = db.collection('messages')
             let u = [fromUser.username,toUser.username].sort((a,b)=>{
-              return a>b?true:false
+              return a>b?-1:1
             }).join()
             console.log('u',u)
             let p2pChatId = md5(
               [fromUser.username,toUser.username].sort((a,b)=>{
-                return a>b?true:false
+                return a>b?-1:1
               }).join()
             )
             let messageFoundResult = await messagesCollection.findOne({p2pChatId})
